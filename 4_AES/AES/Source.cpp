@@ -71,13 +71,22 @@ public:
 
     void Encrypt(int cipher_mode)
     {
-        std::cout << "Enter File name: ";
+        std::cout << "Enter File name or enter \"std\" to use plaintext.docx file: ";
         std::cin >> _filename;
-        if (!_plaintext.Open(_filename))
+        if (_filename == "std")
         {
-            std::cout << "Cannot open source file. Perhaps it doesn't exist." << std::endl;
-            return;
+            if (!_plaintext.Open("plaintext.docx"))
+            {
+                std::cout << "Cannot open plaintext.docx file. Perhaps it doesn't exist." << std::endl;
+                return;
+            }
         }
+        else
+            if (!_plaintext.Open(_filename))
+            {
+                std::cout << "Cannot open source file. Perhaps it doesn't exist." << std::endl;
+                return;
+            }
         system("cls");
 
         byte key[CryptoPP::AES::DEFAULT_KEYLENGTH];
@@ -216,6 +225,8 @@ public:
         }
         _plaintext.GetData().resize(_ciphertext.GetData().size() + CryptoPP::AES::BLOCKSIZE);
         CryptoPP::ArraySink buf(&_plaintext.GetData()[0], _plaintext.GetData().size());
+
+        std::cout << "Decryption...";
 
         switch (cipher_mode)
         {

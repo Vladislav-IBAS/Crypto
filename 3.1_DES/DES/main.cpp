@@ -3,12 +3,12 @@
 #include <string>
 #include <conio.h>
 #include <string>
-#include "..\crypto++\des.h"
-#include "..\crypto++\cryptlib.h"
-#include "..\crypto++\modes.h"
-#include "..\crypto++\osrng.h"
-#include "..\crypto++\filters.h"
-#include "..\crypto++\cbcmac.h"
+#include "..\..\crypto++\des.h"
+#include "..\..\crypto++\cryptlib.h"
+#include "..\..\crypto++\modes.h"
+#include "..\..\crypto++\osrng.h"
+#include "..\..\crypto++\filters.h"
+#include "..\..\crypto++\cbcmac.h"
 #include <vector>
 
 #pragma comment(lib,"cryptlib.lib")
@@ -72,13 +72,22 @@ public:
 
     void Encrypt(int cipher_mode)
     {
-        std::cout << "Enter File name: ";
+        std::cout << "Enter File name or enter \"std\" to use plaintext.docx file: ";
         std::cin >> _filename;
-        if (!_plaintext.Open(_filename))
+        if (_filename == "std")
         {
-            std::cout << "Cannot open source file. Perhaps it doesn't exist." << std::endl;
-            return;
+            if (!_plaintext.Open("plaintext.docx"))
+            {
+                std::cout << "Cannot open plaintext.docx file. Perhaps it doesn't exist." << std::endl;
+                return;
+            }
         }
+        else 
+            if (!_plaintext.Open(_filename))
+            {
+                std::cout << "Cannot open source file. Perhaps it doesn't exist." << std::endl;
+                return;
+            }
         system("cls");
 
         byte key[CryptoPP::DES::DEFAULT_KEYLENGTH];
@@ -217,6 +226,8 @@ public:
         }
         _plaintext.GetData().resize(_ciphertext.GetData().size() + CryptoPP::DES::BLOCKSIZE);
         CryptoPP::ArraySink buf(&_plaintext.GetData()[0], _plaintext.GetData().size());
+
+        std::cout << "Decryption...";
 
         switch (cipher_mode)
         {

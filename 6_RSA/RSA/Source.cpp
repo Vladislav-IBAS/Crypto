@@ -83,8 +83,18 @@ public:
 			return;
 		}
 		
-		std::string strpublic = _publicKey.GetData().data();
-		std::string plaintext = _plaintext.GetData().data();
+		std::string strpublic;
+		std::string plaintext;
+
+		for (int i = 0; i < _publicKey.GetData().size(); i++)
+		{
+			strpublic += _publicKey.GetData().at(i);
+		}
+
+		for (int i = 0; i < _plaintext.GetData().size(); i++)
+		{
+			plaintext += _plaintext.GetData().at(i);
+		}
 
 		CryptoPP::StringSource pubString(strpublic, true, new CryptoPP::Base64Decoder);
 		CryptoPP::RSAES_OAEP_SHA_Encryptor Encryptor(pubString);
@@ -105,6 +115,7 @@ public:
 
 	void Decrypt()
 	{
+		MyFile DecryptedText;
 		if (!_privateKey.Open("privateKey.txt"))
 		{
 			return;
@@ -114,8 +125,18 @@ public:
 			return;
 		}
 
-		std::string strprivate = _privateKey.GetData().data();
-		std::string ciphertext = _ciphertext.GetData().data();
+		std::string strprivate;
+		std::string ciphertext;
+
+		for (int i = 0; i < _privateKey.GetData().size(); i++)
+		{
+			strprivate += _privateKey.GetData().at(i);
+		}
+
+		for (int i = 0; i < _ciphertext.GetData().size(); i++)
+		{
+			ciphertext += _ciphertext.GetData().at(i);
+		}
 
 		CryptoPP::StringSource privString(strprivate, true, new CryptoPP::Base64Decoder);
 		CryptoPP::RSAES_OAEP_SHA_Decryptor Decryptor(privString);
@@ -129,9 +150,9 @@ public:
 
 		for (int i = 0; i < decryptText.size(); i++)
 		{
-			_plaintext.GetData().push_back(decryptText[i]);
+			DecryptedText.GetData().push_back(decryptText[i]);
 		}
-		_plaintext.Write("plaintext1.txt");
+		DecryptedText.Write("plaintext1.txt");
 	}
 
 	void GenerateKey()
@@ -168,50 +189,10 @@ public:
 
 int main()
 {
-	//RSA rsa;
-	//rsa.GenerateKey();
-	//rsa.Encrypt();
-	//rsa.Decrypt();
-
-	MyFile p2;
-	MyFile p3;
-	MyFile pl;
-	MyFile cip;
-	p2.Open("publicKey.txt");
-	p3.Open("privateKey.txt");
-	std::string strpublic(p2.GetData().data());
-	std::string strprivate(p3.GetData().data());
-
-	CryptoPP::StringSource pubString(strpublic, true, new CryptoPP::Base64Decoder);
-	CryptoPP::RSAES_OAEP_SHA_Encryptor Encryptor(pubString);
-	CryptoPP::AutoSeededRandomPool randPool;
-
-	pl.Open("plaintext.txt");
-
-	std::string plainText = pl.GetData().data();
-	std::string encryptText, decryptText;
-	CryptoPP::StringSource(plainText, true,
-		new CryptoPP::PK_EncryptorFilter(randPool, Encryptor,
-			new CryptoPP::StringSink(encryptText)));
-
-	for (int i = 0; i < encryptText.size(); i++)
-	{
-		cip.GetData().push_back(encryptText[i]);
-	}
-	cip.Write("ciphertext.txt");
-
-	//std::cout << encryptText << std::endl;
-
-	cip.Open("ciphertext.txt");
-
-	CryptoPP::StringSource privString(strprivate, true, new CryptoPP::Base64Decoder);
-	CryptoPP::RSAES_OAEP_SHA_Decryptor Decryptor(privString);
-
-	CryptoPP::StringSource(cip.GetData().data(), true,
-		new CryptoPP::PK_DecryptorFilter(randPool, Decryptor,
-			new CryptoPP::StringSink(decryptText)));
-
-	std::cout << decryptText << std::endl;
+	RSA rsa;
+	rsa.GenerateKey();
+	rsa.Encrypt();
+	rsa.Decrypt();
 
 	system("pause");
 }

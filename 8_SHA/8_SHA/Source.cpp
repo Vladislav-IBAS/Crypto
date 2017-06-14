@@ -14,72 +14,24 @@
 #include "..\..\crypto++\channels.h"
 #include "..\..\crypto++\hex.h"
 #include "comutil.h"
+#include "..\..\Classes\MyFile.h"
 #include <vector>
 
-#pragma comment(lib,"cryptlib.lib")
+#pragma comment(lib,"..\\..\\cryptlib.lib")
 
-class MyFile
+std::vector<byte> SHA(std::vector<byte> data)
 {
-private:
-	std::vector<char> _data;
-	FILE* _file;
-
-public:
-	MyFile()
-		: _file(NULL), _data(NULL)
-	{
-
-	}
-
-	bool Open(std::string name)
-	{
-		const char *_name = name.c_str();
-		_file = fopen(_name, "rb");
-
-		if (_file != NULL)
-		{
-			fseek(_file, 0, SEEK_END);
-			int size = ftell(_file);
-			rewind(_file);
-			_data.resize(size);
-			fread(_data.data(), 1, size, _file);
-			fclose(_file);
-		}
-		return !_data.empty();
-	}
-	bool Write(std::string name)
-	{
-		const char *_name = name.c_str();
-		_file = fopen(_name, "w+b");
-		int flag = fwrite(_data.data(), 1, _data.size(), _file);
-		fclose(_file);
-		return !(flag == 0);
-	}
-
-	std::vector<char> &GetData() { return _data; }
-
-};
-
-void SHA(std::string filename)
-{
-	MyFile plaintext;
 	MyFile hash;
-	
-	if (!plaintext.Open(filename))
-	{
-		std::cout << "Cannot open plaintext file";
-		return;
-	}
 
 	std::string message;
-	for (int i = 0; i < plaintext.GetData().size(); i++)
+	for (int i = 0; i < data.size(); i++)
 	{
-		message += plaintext.GetData().at(i);
+		message += data.at(i);
 	}
 
 	std::string hashstr;
-	CryptoPP::SHA512 sha512;
-	CryptoPP::HashFilter filter(sha512, new CryptoPP::HexEncoder(new CryptoPP::StringSink(hashstr)));
+	CryptoPP::SHA256 sha256;
+	CryptoPP::HashFilter filter(sha256, new CryptoPP::HexEncoder(new CryptoPP::StringSink(hashstr)));
 	
 	CryptoPP::ChannelSwitch cs;
 	cs.AddDefaultRoute(filter);
@@ -88,14 +40,19 @@ void SHA(std::string filename)
 
 	for (int i = 0; i < hashstr.size(); i++)
 	{
+
 		hash.GetData().push_back(hashstr[i]);
 	}
-	hash.Write("Hash.txt");
+	return hash.GetData();
 }
 
 void main()
 {
-	SHA("plaintext.txt");
+	MyFile plaintext;
+	MyFile hash;
+	plaintext.Open("..\\..\\plaintext.txt");
+	hash.GetData() = SHA(plaintext.GetData());
+	hash.Write("hash_sha.txt");
 
 	system("pause");
 }

@@ -11,52 +11,11 @@
 #include "..\..\crypto++\cbcmac.h"
 #include "..\..\crypto++\base64.h"
 #include "..\..\crypto++\files.h"
+#include "..\\..\\Classes\MyFile.h"
 #include "comutil.h"
 #include <vector>
 
-#pragma comment(lib,"cryptlib.lib")
-
-class MyFile
-{
-private:
-	std::vector<char> _data;
-	FILE* _file;
-
-public:
-	MyFile()
-		: _file(NULL), _data(NULL)
-	{
-
-	}
-
-	bool Open(std::string name)
-	{
-		const char *_name = name.c_str();
-		_file = fopen(_name, "rb");
-
-		if (_file != NULL)
-		{
-			fseek(_file, 0, SEEK_END);
-			int size = ftell(_file);
-			rewind(_file);
-			_data.resize(size);
-			fread(_data.data(), 1, size, _file);
-			fclose(_file);
-		}
-		return !_data.empty();
-	}
-	bool Write(std::string name)
-	{
-		const char *_name = name.c_str();
-		_file = fopen(_name, "w+b");
-		int flag = fwrite(_data.data(), 1, _data.size(), _file);
-		fclose(_file);
-		return !(flag == 0);
-	}
-
-	std::vector<char> &GetData() { return _data; }
-
-};
+#pragma comment(lib,"..\\..\\cryptlib.lib")
 
 class RSA
 {
@@ -78,37 +37,63 @@ public:
 		{
 			return;
 		}
-		if (!_plaintext.Open("plaintext.txt"))
+		if (!_plaintext.Open("..\\..\\plaintext.txt"))
 		{
 			return;
 		}
 		
 		std::string strpublic;
 		std::string plaintext;
+		std::string my_ciphertext = "";
 
 		for (int i = 0; i < _publicKey.GetData().size(); i++)
 		{
 			strpublic += _publicKey.GetData().at(i);
 		}
 
-		for (int i = 0; i < _plaintext.GetData().size(); i++)
+		int count = _plaintext.GetData().size() / 86;
+
+		int k = 0;
+		int st = 86;
+		for (int t = 0; t < count; t++)
 		{
-			plaintext += _plaintext.GetData().at(i);
+			plaintext = "";
+			for (; k < st; k++)
+			{
+				plaintext += _plaintext.GetData().at(k);
+			}
+			st += 86;
+
+			std::string encryptText = "";
+			CryptoPP::StringSource pubString(strpublic, true, new CryptoPP::Base64Decoder);
+			CryptoPP::RSAES_OAEP_SHA_Encryptor Encryptor(pubString);
+			CryptoPP::AutoSeededRandomPool randPool;
+
+			CryptoPP::StringSource(plaintext, true,
+				new CryptoPP::PK_EncryptorFilter(randPool, Encryptor,
+					new CryptoPP::StringSink(encryptText)));
+			my_ciphertext += encryptText;
 		}
 
+		plaintext = "";
+		for (; k < _plaintext.GetData().size(); k++)
+		{
+			plaintext += _plaintext.GetData().at(k);
+		}
+
+		std::string encryptText = "";
 		CryptoPP::StringSource pubString(strpublic, true, new CryptoPP::Base64Decoder);
 		CryptoPP::RSAES_OAEP_SHA_Encryptor Encryptor(pubString);
 		CryptoPP::AutoSeededRandomPool randPool;
 
-
-		std::string encryptText = "";
 		CryptoPP::StringSource(plaintext, true,
 			new CryptoPP::PK_EncryptorFilter(randPool, Encryptor,
 				new CryptoPP::StringSink(encryptText)));
 
-		for (int i = 0; i < encryptText.size(); i++)
+		my_ciphertext += encryptText;
+		for (int i = 0; i < my_ciphertext.size(); i++)
 		{
-			_ciphertext.GetData().push_back(encryptText[i]);
+			_ciphertext.GetData().push_back(my_ciphertext[i]);
 		}
 		_ciphertext.Write("ciphertext.txt");
 	}
@@ -127,30 +112,42 @@ public:
 
 		std::string strprivate;
 		std::string ciphertext;
+		std::string my_plaintext = "";
 
 		for (int i = 0; i < _privateKey.GetData().size(); i++)
 		{
 			strprivate += _privateKey.GetData().at(i);
 		}
 
-		for (int i = 0; i < _ciphertext.GetData().size(); i++)
+		int count = _ciphertext.GetData().size() / 128;
+
+		int k = 0;
+		int st = 128;
+		
+		for (int t = 0; t < count; t++)
 		{
-			ciphertext += _ciphertext.GetData().at(i);
+			ciphertext = "";
+			for (; k < st; k++)
+			{
+				ciphertext += _ciphertext.GetData().at(k);
+			}
+			st += 128;
+
+			CryptoPP::StringSource privString(strprivate, true, new CryptoPP::Base64Decoder);
+			CryptoPP::RSAES_OAEP_SHA_Decryptor Decryptor(privString);
+			CryptoPP::AutoSeededRandomPool randPool;
+			std::string decryptText = "";
+
+
+			CryptoPP::StringSource(ciphertext, true,
+				new CryptoPP::PK_DecryptorFilter(randPool, Decryptor,
+					new CryptoPP::StringSink(decryptText)));
+			my_plaintext += decryptText;
 		}
 
-		CryptoPP::StringSource privString(strprivate, true, new CryptoPP::Base64Decoder);
-		CryptoPP::RSAES_OAEP_SHA_Decryptor Decryptor(privString);
-		CryptoPP::AutoSeededRandomPool randPool;
-		std::string decryptText = "";
-
-
-		CryptoPP::StringSource(ciphertext, true,
-			new CryptoPP::PK_DecryptorFilter(randPool, Decryptor,
-				new CryptoPP::StringSink(decryptText)));
-
-		for (int i = 0; i < decryptText.size(); i++)
+		for (int i = 0; i < my_plaintext.size(); i++)
 		{
-			DecryptedText.GetData().push_back(decryptText[i]);
+			DecryptedText.GetData().push_back(my_plaintext[i]);
 		}
 		DecryptedText.Write("plaintext1.txt");
 	}
@@ -190,9 +187,18 @@ public:
 int main()
 {
 	RSA rsa;
-	rsa.GenerateKey();
-	rsa.Encrypt();
-	rsa.Decrypt();
+	std::cout << "1. Encrypt\n2. Decrypt\n";
+	int mode;
+	std::cin >> mode;
+	if (mode == 1)
+	{
+		rsa.GenerateKey();
+		rsa.Encrypt();
+	}
+	else
+	{
+		rsa.Decrypt();
+	}
 
 	system("pause");
 }

@@ -11,7 +11,7 @@
 #include "..\..\crypto++\cbcmac.h"
 #include <vector>
 
-#pragma comment(lib,"cryptlib.lib")
+#pragma comment(lib,"..\\..\\cryptlib.lib")
 
 
 class MyFile

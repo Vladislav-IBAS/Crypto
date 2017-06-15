@@ -3,15 +3,15 @@
 #include <string>
 #include <conio.h>
 #include <string>
-#include "..\crypto++\des.h"
-#include "..\crypto++\cryptlib.h"
-#include "..\crypto++\modes.h"
-#include "..\crypto++\osrng.h"
-#include "..\crypto++\filters.h"
-#include "..\crypto++\cbcmac.h"
+#include "..\..\crypto++\des.h"
+#include "..\..\crypto++\cryptlib.h"
+#include "..\..\crypto++\modes.h"
+#include "..\..\crypto++\osrng.h"
+#include "..\..\crypto++\filters.h"
+#include "..\..\crypto++\cbcmac.h"
 #include <vector>
 
-#pragma comment(lib,"cryptlib.lib")
+#pragma comment(lib,"..\\..\\cryptlib.lib")
 
 class MyFile
 {

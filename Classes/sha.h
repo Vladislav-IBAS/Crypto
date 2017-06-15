@@ -17,7 +17,7 @@
 #include "..\..\Classes\MyFile.h"
 #include <vector>
 
-#pragma comment(lib,"cryptlib.lib")
+#pragma comment(lib,"..\\..\\cryptlib.lib")
 
 std::vector<byte> SHA(std::vector<byte> data)
 {
@@ -30,18 +30,18 @@ std::vector<byte> SHA(std::vector<byte> data)
 	}
 
 	std::string hashstr;
-	CryptoPP::SHA256 sha256;
-	CryptoPP::HashFilter filter(sha256, new CryptoPP::HexEncoder(new CryptoPP::StringSink(hashstr)));
-	
+	CryptoPP::SHA512 sha512;
+	CryptoPP::HashFilter filter(sha512, new CryptoPP::HexEncoder(new CryptoPP::StringSink(hashstr)));
+
 	CryptoPP::ChannelSwitch cs;
 	cs.AddDefaultRoute(filter);
 
 	CryptoPP::StringSource ss(message, true, new CryptoPP::Redirector(cs));
 
-	for (int i = 0; i < hashstr.size(); i++)
+	for (int i = 0; i < hashstr.size(); i += 2)
 	{
-
-		hash.GetData().push_back(hashstr[i]);
+		byte tmp = ((byte)hashstr[i] << 4) + (byte)hashstr[i + 1];
+		hash.GetData().push_back(tmp);
 	}
 	return hash.GetData();
 }

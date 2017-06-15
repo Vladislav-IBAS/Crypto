@@ -1,6 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <sstream>
-//#define byte unsigned char
 
 #include "iostream"
 #include <string>
@@ -8,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <stdint.h>
+#include <windows.h>
 #include <math.h>
 #include "..\..\Classes\MyFile.h"
 #include "..\..\Classes\MyHash.h"
@@ -141,7 +141,7 @@ double Entropy(std::vector<byte> hash, int size = 8, int mode = 1)
 		delete[] arr;
 	}
 
-	if (size == 32)
+	/*if (size == 32)
 	{
 		n = pow(2, 16);
 		uint16_t **arr = new uint16_t*[n];
@@ -185,7 +185,7 @@ double Entropy(std::vector<byte> hash, int size = 8, int mode = 1)
 		}
 
 		delete[] arr;
-	}
+	}*/
 
 	return -E;
 }
@@ -209,6 +209,8 @@ void main()
 	my_hash.Open("my_hash.txt");
 	sha.Open("hash_sha.txt");
 	bool flag = true;
+
+	CreateDirectory("Results", NULL);
 
 	while (flag)
 	{
@@ -272,11 +274,17 @@ void main()
 		}
 		if (size == 4)
 		{
+			FILE* _file(NULL);
+			_file = fopen("Results\\All results.txt", "w");
+
 			system("cls");
 			std::cout << "Entropy 8 bit" << std::endl;
 			std::cout << "for plaintext: " << Entropy(plaintext.GetData()) << std::endl;
 			std::cout << "for my hash: " << Entropy(my_hash.GetData()) << std::endl;
 			std::cout << "for sha: " << Entropy(sha.GetData()) << std::endl << std::endl;
+
+			fprintf(_file, "Entropy 8 bit:\nfor plaintext: %f\nfor my hash: %f\nfor sha: %f\n\n",
+				Entropy(plaintext.GetData()), Entropy(my_hash.GetData()), Entropy(sha.GetData()));
 			
 			std::cout << "Entropy 16 bit" << std::endl;
 			std::cout << "With overlay" << std::endl;
@@ -284,14 +292,22 @@ void main()
 			std::cout << "for my hash: " << Entropy(my_hash.GetData(), 16, 1) << std::endl;
 			std::cout << "for sha: " << Entropy(sha.GetData(), 16, 1) << std::endl << std::endl;
 
+			fprintf(_file, "Entropy 16 bit with overlay:\nfor plaintext: %f\nfor my hash: %f\nfor sha: %f\n\n", 
+				Entropy(plaintext.GetData(), 16, 1),
+				Entropy(my_hash.GetData(), 16, 1), Entropy(sha.GetData(), 16, 1));
+
 			std::cout << "Entropy 16 bit" << std::endl;
 			std::cout << "Without overlay" << std::endl;
 			std::cout << "for plaintext: " << Entropy(plaintext.GetData(), 16, 2) << std::endl;
 			std::cout << "for my hash: " << Entropy(my_hash.GetData(), 16, 2) << std::endl;
 			std::cout << "for sha: " << Entropy(sha.GetData(), 16, 2) << std::endl << std::endl;
 
+			fprintf(_file, "Entropy 16 bit without overlay:\nfor plaintext: %f\nfor my hash: %f\nfor sha: %f\n\n",
+				Entropy(plaintext.GetData(), 16, 2),
+				Entropy(my_hash.GetData(), 16, 2), Entropy(sha.GetData(), 16, 2));
+
 			HZIP plain = CreateZip("plaintext.zip", 0);
-			ZipAdd(plain, "plaintextZIP.txt", "plaintext.txt");
+			ZipAdd(plain, "plaintextZIP.txt", "..\\..\\plaintext.txt");
 			CloseZip(plain);
 			HZIP myHash = CreateZip("myHash.zip", 0);
 			ZipAdd(myHash, "my_hashZIP.txt", "my_hash.txt");
@@ -300,9 +316,17 @@ void main()
 			ZipAdd(shaHash, "hash_sha.txt", "hash_sha.txt");
 			CloseZip(shaHash);
 			std::cout << "Compression:" << std::endl;
-			std::cout << "for plaintext: " << Compression("plaintext.txt", "plaintext.zip") << std::endl;
-			std::cout << "for my hash: " << Compression("my_hash.txt", "myHash.zip") << std::endl;
-			std::cout << "for sha: " << Compression("hash_sha.txt", "shaHash.zip") << std::endl << std::endl;
+			std::cout << "for plaintext: " << Compression("..\\..\\plaintext.txt", "plaintext.zip") << "%" << std::endl;
+			std::cout << "for my hash: " << Compression("my_hash.txt", "myHash.zip") << "%" << std::endl;
+			std::cout << "for sha: " << Compression("hash_sha.txt", "shaHash.zip") << "%" << std::endl << std::endl;
+
+			fprintf(_file, "Compression:\nfor plaintext: %f%%\nfor my hash: %f%%\nfor sha: %f%%\n\n",
+				Compression("..\\..\\plaintext.txt", "plaintext.zip"), Compression("my_hash.txt", "myHash.zip"),
+				Compression("hash_sha.txt", "shaHash.zip"));
+
+			std::cout << "You can find results in \"Results\\All results.txt\"" << std::endl;
+
+			fclose(_file);
 
 			system("pause");
 		}
@@ -312,7 +336,7 @@ void main()
 			_file = fopen("Results\\Compression.txt", "w");
 			system("cls");
 			HZIP plain = CreateZip("plaintext.zip", 0);
-			ZipAdd(plain, "plaintextZIP.txt", "plaintext.txt");
+			ZipAdd(plain, "plaintextZIP.txt", "..\\..\\plaintext.txt");
 			CloseZip(plain);
 			HZIP myHash = CreateZip("myHash.zip", 0);
 			ZipAdd(myHash, "my_hashZIP.txt", "my_hash.txt");
@@ -321,13 +345,14 @@ void main()
 			ZipAdd(shaHash, "hash_sha.txt", "hash_sha.txt");
 			CloseZip(shaHash);
 			std::cout << "Compression:" << std::endl;
-			std::cout << "for plaintext: " << Compression("plaintext.txt", "plaintext.zip") << std::endl;
-			std::cout << "for my hash: " << Compression("my_hash.txt", "myHash.zip") << std::endl;
-			std::cout << "for sha: " << Compression("hash_sha.txt", "shaHash.zip") << std::endl << std::endl;
+			std::cout << "for plaintext: " << Compression("..\\..\\plaintext.txt", "plaintext.zip") << "%" << std::endl;
+			std::cout << "for my hash: " << Compression("my_hash.txt", "myHash.zip") << "%" << std::endl;
+			std::cout << "for sha: " << Compression("hash_sha.txt", "shaHash.zip") << "%" << std::endl << std::endl;
 			std::cout << "You can find results in \"Results\\Compression.txt\"" << std::endl;
 
-			fprintf(_file, "Compression:\nfor plaintext: %f\nfor my hash: %f\nfor sha: %f\n\n", Compression("plaintext.txt", "plaintext.zip"),
-				Compression("my_hash.txt", "myHash.zip"), Compression("hash_sha.txt", "shaHash.zip"));
+			fprintf(_file, "Compression:\nfor plaintext: %f%%\nfor my hash: %f%%\nfor sha: %f%%\n\n", 
+				Compression("..\\..\\plaintext.txt", "plaintext.zip"), Compression("my_hash.txt", "myHash.zip"),
+				Compression("hash_sha.txt", "shaHash.zip"));
 			fclose(_file);
 			
 			system("pause");

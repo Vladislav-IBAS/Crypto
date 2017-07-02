@@ -1,1 +1,0 @@
-https://stackoverflow.com/questions/29467707/how-to-easily-apply-crypto-hash-functions

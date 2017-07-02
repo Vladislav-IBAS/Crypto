@@ -1,4 +1,4 @@
-#include "..\third-party\src\mpir-2.7.2\lib_mpir_cxx\Win32\Debug\mpirxx.h"
+#include "..\third-party\src\mpir-2.7.2\lib_mpir_cxx\mpirxx.h"
 #include <iostream>
 #include <ctime>
 #include <stdio.h>

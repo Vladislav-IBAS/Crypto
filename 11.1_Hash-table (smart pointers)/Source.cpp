@@ -17,7 +17,14 @@
 
 #pragma comment(lib,"..\\third-party\\lib\\my.lib")
 
-int CreateHashTable(LPCSTR InitialPath, std::vector<std::vector<std::pair<std::string, std::vector<std::string>>>> &table,
+struct Ht
+{
+	std::string key;
+	std::vector<std::string> attributes;
+	std::shared_ptr<Ht> next = NULL;
+};
+
+int CreateHashTable(LPCSTR InitialPath, std::vector<std::shared_ptr<Ht>> &table,
 	int &count, int &rows, int hashF = 0, double alpha_max = 2)
 {
 	double alpha = 0;
@@ -44,7 +51,6 @@ int CreateHashTable(LPCSTR InitialPath, std::vector<std::vector<std::pair<std::s
 			}
 			do
 			{
-				count++;
 				std::stringstream ss;
 				bool folder = false;
 				std::vector<mybyte> src;
@@ -62,74 +68,6 @@ int CreateHashTable(LPCSTR InitialPath, std::vector<std::vector<std::pair<std::s
 					src.push_back(fullPath[i]);
 					i++;
 				}
-
-				if (FindFileData.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)
-				{
-					folder = true;
-					attributes.push_back("Type: Folder");
-				}
-				else
-				{
-					attributes.push_back("Type: File");
-				}
-
-				ss << "Full path: " << fullPath;
-				attributes.push_back(ss.str());
-
-				ss.str(std::string());
-				ss << "Name: " << FindFileData.cFileName;
-				attributes.push_back(ss.str());
-
-				ss.str(std::string());
-				FileTimeToSystemTime(&FindFileData.ftCreationTime, &time);
-				ss << "Creation time: " << time.wDay << "." << time.wMonth << "." << time.wYear << " " << time.wHour << ":" << time.wMinute;
-				attributes.push_back(ss.str());
-
-				ss.str(std::string());
-				FileTimeToSystemTime(&FindFileData.ftLastWriteTime, &time);
-				ss << "Last write time: " << time.wDay << "." << time.wMonth << "." << time.wYear << " " << time.wHour << ":" << time.wMinute;
-				attributes.push_back(ss.str());
-
-				ss.str(std::string());
-				ss << "Size: " << (FindFileData.nFileSizeHigh * (MAXDWORD + 1)) + FindFileData.nFileSizeLow;
-				attributes.push_back(ss.str());
-
-				if (FindFileData.dwFileAttributes&FILE_ATTRIBUTE_READONLY)
-				{
-					attributes.push_back("Readonly: Yes");
-				}
-				else
-				{
-					attributes.push_back("Readonly: No");
-				}
-
-				if (FindFileData.dwFileAttributes&FILE_ATTRIBUTE_HIDDEN)
-				{
-					attributes.push_back("Hidden: Yes");
-				}
-				else
-				{
-					attributes.push_back("Hidden: No");
-				}
-
-				if (FindFileData.dwFileAttributes&FILE_ATTRIBUTE_SYSTEM)
-				{
-					attributes.push_back("System: Yes");
-				}
-				else
-				{
-					attributes.push_back("System: No");
-				}
-
-				if (FindFileData.dwFileAttributes&FILE_ATTRIBUTE_COMPRESSED)
-				{
-					attributes.push_back("Compressed: Yes");
-				}
-				else
-				{
-					attributes.push_back("Compressed: No");
-				}
-
 				switch (hashF)
 				{
 				case 0: hash = My_hash(src, 2); break;
@@ -140,12 +78,120 @@ int CreateHashTable(LPCSTR InitialPath, std::vector<std::vector<std::pair<std::s
 					break;
 				}
 				index = (hash.at(0) << 8) + hash.at(1);
-				if (table.at(index).size() == 0)
-				{
-					rows++;
-				}
 
-				table.at(index).push_back(std::make_pair(fullPath, attributes));
+				bool writed = false;
+
+				if (table.at(index) != NULL)
+				{
+					std::shared_ptr<Ht> elem = table.at(index);
+					while (elem != NULL && !writed)
+					{
+						Ht element = *elem.get();
+						if (element.key == fullPath)
+						{
+							writed = true;
+						}
+						elem = (*elem.get()).next;
+					}
+				}
+				if (FindFileData.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)
+				{
+					folder = true;
+				}
+				if (!writed)
+				{
+					count++;
+					if (FindFileData.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)
+					{
+						folder = true;
+						attributes.push_back("Type: Folder");
+					}
+					else
+					{
+						attributes.push_back("Type: File");
+					}
+
+					ss << "Full path: " << fullPath;
+					attributes.push_back(ss.str());
+
+					ss.str(std::string());
+					ss << "Name: " << FindFileData.cFileName;
+					attributes.push_back(ss.str());
+
+					ss.str(std::string());
+					FileTimeToSystemTime(&FindFileData.ftCreationTime, &time);
+					ss << "Creation time: " << time.wDay << "." << time.wMonth << "." << time.wYear << " " << time.wHour << ":" << time.wMinute;
+					attributes.push_back(ss.str());
+
+					ss.str(std::string());
+					FileTimeToSystemTime(&FindFileData.ftLastWriteTime, &time);
+					ss << "Last write time: " << time.wDay << "." << time.wMonth << "." << time.wYear << " " << time.wHour << ":" << time.wMinute;
+					attributes.push_back(ss.str());
+
+					ss.str(std::string());
+					ss << "Size: " << (FindFileData.nFileSizeHigh * (MAXDWORD + 1)) + FindFileData.nFileSizeLow;
+					attributes.push_back(ss.str());
+
+					if (FindFileData.dwFileAttributes&FILE_ATTRIBUTE_READONLY)
+					{
+						attributes.push_back("Readonly: Yes");
+					}
+					else
+					{
+						attributes.push_back("Readonly: No");
+					}
+
+					if (FindFileData.dwFileAttributes&FILE_ATTRIBUTE_HIDDEN)
+					{
+						attributes.push_back("Hidden: Yes");
+					}
+					else
+					{
+						attributes.push_back("Hidden: No");
+					}
+
+					if (FindFileData.dwFileAttributes&FILE_ATTRIBUTE_SYSTEM)
+					{
+						attributes.push_back("System: Yes");
+					}
+					else
+					{
+						attributes.push_back("System: No");
+					}
+
+					if (FindFileData.dwFileAttributes&FILE_ATTRIBUTE_COMPRESSED)
+					{
+						attributes.push_back("Compressed: Yes");
+					}
+					else
+					{
+						attributes.push_back("Compressed: No");
+					}
+
+					if (table.at(index) == NULL)
+					{
+						rows++;
+						Ht element;
+						element.key = fullPath;
+						element.attributes = attributes;
+						element.next = NULL;
+						table.at(index) = std::make_shared<Ht>(element);
+					}
+					else
+					{
+						//Ht element = (*table.at(index).get());
+						std::shared_ptr<Ht> el = table.at(index);
+						while ((*el.get()).next != NULL)
+						{
+							el = (*el.get()).next;
+						}
+						Ht new_element;
+						new_element.key = fullPath;
+						new_element.attributes = attributes;
+						new_element.next = NULL;
+						(*el.get()).next = std::make_shared<Ht>(new_element);
+					}
+				}
 
 				if (folder)
 				{
@@ -158,6 +204,7 @@ int CreateHashTable(LPCSTR InitialPath, std::vector<std::vector<std::pair<std::s
 				{
 					std::cout << "\r" << "Count of objects: " << count << " \\ alpha average: " << count / (double)rows;
 				}
+
 			} while (FindNextFile(hf, &FindFileData));
 			FindClose(hf);
 			return 0;
@@ -218,14 +265,17 @@ void main()
 	int b = 16;
 	int hashF = 0;
 	bool tableCreated = false;
-	double alpha_max = 1.31;
+	double alpha_max = 1.29;
 	unsigned int start_time;
 	unsigned int end_time;
 	bool flag = true;
-	LPCSTR path = "C:";
-	std::vector<std::vector<std::pair<std::string, std::vector<std::string>>>> table;
+	LPCSTR path = "C:\\Program Files";
 
-	table.resize(pow(2, b));
+	std::vector<std::shared_ptr<Ht>> ptr_table;
+	ptr_table.resize(pow(2, b));
+
+	std::vector<std::shared_ptr<Ht>> ptr_tmp;
+	ptr_tmp.resize(pow(2, b));
 
 	while (flag)
 	{
@@ -245,6 +295,7 @@ void main()
 			HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 			int col = 0;
 			bool created = false;
+			bool tried = false;
 
 			system("cls");
 			std::cout << "1 - My hash" << std::endl;
@@ -274,8 +325,66 @@ void main()
 
 				count = 0;
 				rows = 0;
-				table.clear();
-				table.resize(pow(2, b));
+
+				if (tried)
+				{
+					std::cout << "Rebuilding table..." << std::endl;
+					for (int i = 0; i < ptr_table.size(); i++)
+					{
+						std::shared_ptr<Ht> el = ptr_table.at(i);
+						if (el != NULL)
+						{
+							while (el != NULL)
+							{
+								count++;
+								Ht element = *el.get();
+								std::vector<mybyte> src;
+								for (int j = 0; j < element.key.size(); j++)
+								{
+									src.push_back(element.key[j]);
+								}
+								std::vector<mybyte> hash;
+								switch (hashF)
+								{
+								case 0: hash = My_hash(src, 2); break;
+								case 1: hash = SHA(src); hash.resize(2); break;
+								case 2: hash = Dimas_hash(src, 2); hash.resize(2); break;
+								case 3: hash = Ksusha_hash(src, 2); hash.resize(2); break;
+								default:
+									break;
+								}
+								uint16_t index = (hash.at(0) << 8) + hash.at(1);
+
+								if (ptr_tmp.at(index) == NULL)
+								{
+									rows++;
+									Ht tmp_element = *el.get();
+									ptr_tmp.at(index) = std::make_shared<Ht>(tmp_element);
+									(*ptr_tmp.at(index).get()).next = NULL;
+								}
+								else
+								{
+									std::shared_ptr<Ht> tmp = ptr_tmp.at(index);
+									while ((*tmp.get()).next != NULL)
+									{
+										tmp = (*tmp.get()).next;
+									}
+									Ht tmp_element = *el.get();
+									(*tmp.get()).next = std::make_shared<Ht>(tmp_element);
+									tmp = (*tmp.get()).next;
+									(*tmp.get()).next = NULL;
+								}
+								el = (*el.get()).next;
+							}
+						}
+					}
+					ptr_table.clear();
+					ptr_table.resize(pow(2, b));
+					ptr_table = ptr_tmp;
+					ptr_tmp.clear();
+					ptr_tmp.resize(pow(2, b));
+					std::cout << "Done!" << std::endl;
+				}
 
 				std::cout << "Path for hash-table: " << path << std::endl;
 				std::cout << "Alpha max: " << alpha_max << std::endl;
@@ -285,8 +394,9 @@ void main()
 				SetConsoleTextAttribute(hConsole, (WORD)((0 << 4) | 7));
 				std::cout << "..." << std::endl;
 				start_time = clock();
-				if (CreateHashTable(path, table, count, rows, (hash_num - 1) % 4, alpha_max) == 13)
+				if (CreateHashTable(path, ptr_table, count, rows, (hash_num - 1) % 4, alpha_max) == 13)
 				{
+					tried = true;
 					end_time = clock();
 					std::cout << "\r" << "Count of objects: " << count << " \\ alpha average: " << count / (double)rows << std::endl;
 					SetConsoleTextAttribute(hConsole, (WORD)((0 << 4) | 6));
@@ -362,16 +472,19 @@ void main()
 			hTable = fopen(fName.c_str(), "w");
 			std::stringstream ss;
 			std::cout << "\nWriting...\n";
-			for (int i = 0; i < table.size(); i++)
+			for (int i = 0; i < ptr_table.size(); i++)
 			{
-				if (table.at(i).size() > 0)
+				std::shared_ptr<Ht> el = ptr_table.at(i);
+				if (el != NULL)
 				{
 					bool f = false;
 					fprintf(hTable, "%-6d|  ", i);
-					for (auto k : table.at(i))
+					while (el != NULL)
 					{
+						Ht element = *el.get();
+						el = (*el.get()).next;
 						ss.str(std::string());
-						ss << k.first;
+						ss << element.key;
 						if (!f)
 						{
 							if (ss.str().size() > 100)
@@ -418,7 +531,10 @@ void main()
 				break;
 			}
 			system("cls");
-			Search("C:\\Program Files\\Microsoft Office\\Office15\\AppSharingChromeHook64.dll", table, hashF);
+
+
+
+
 			system("pause");
 			break;
 		}

@@ -29,7 +29,7 @@ std::vector<byte> Encrypt(std::vector<byte> plaintext, std::vector<byte> myKey)
 
 	CryptoPP::ECB_Mode<CryptoPP::DES>::Encryption enc(key, sizeof(key));
 	CryptoPP::ArraySource(plaintext.data(), plaintext.size(), true,
-		new CryptoPP::StreamTransformationFilter(enc, new CryptoPP::Redirector(buf), CryptoPP::StreamTransformationFilter::DEFAULT_PADDING));
+		new CryptoPP::StreamTransformationFilter(enc, new CryptoPP::Redirector(buf), CryptoPP::StreamTransformationFilter::ZEROS_PADDING));
 
 	ciphertext.resize(buf.TotalPutLength());
 
@@ -52,7 +52,7 @@ std::vector<byte> Decrypt(std::vector<byte> ciphertext, std::vector<byte> myKey)
 
 	CryptoPP::ECB_Mode<CryptoPP::DES>::Decryption dec(key, sizeof(key));
 	CryptoPP::ArraySource(ciphertext.data(), ciphertext.size(), true,
-		new CryptoPP::StreamTransformationFilter(dec, new CryptoPP::Redirector(buf), CryptoPP::StreamTransformationFilter::DEFAULT_PADDING));
+		new CryptoPP::StreamTransformationFilter(dec, new CryptoPP::Redirector(buf), CryptoPP::StreamTransformationFilter::ZEROS_PADDING));
 
 	plaintext.resize(buf.TotalPutLength());
 	

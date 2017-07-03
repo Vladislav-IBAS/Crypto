@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <math.h>
-#include "..\..\Classes\MyFile.h"
+#include "..\shared\MyFile.h"
 
 std::vector<mybyte> My_hash(std::vector<mybyte> data, int size = 64)
 {

@@ -98,7 +98,7 @@ void main()
 	std::map<std::vector<mybyte>, std::vector<mybyte>> d;
 	std::map<std::vector<mybyte>, std::vector<mybyte>> e;
 
-	plaintext.Open("1.txt");
+	plaintext.Open("..\\resources\\1.txt");
 	plain = plaintext.GetData();
 
 	byte tmp;
